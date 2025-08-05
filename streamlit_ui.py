@@ -103,6 +103,28 @@ def generate_backend_code(backend_srd, project_name):
         st.error(f"Error: {str(e)}")
         return None
 
+def generate_frontend_code(frontend_srd, project_name):
+    """Generate Angular frontend code from SRD"""
+    try:
+        payload = {
+            "frontend_srd": frontend_srd,
+            "project_name": project_name,
+            "framework": "angular",
+            "output_format": "files"
+        }
+        
+        with st.spinner("Generating Angular frontend code..."):
+            response = requests.post(f"{API_BASE_URL}/generate-frontend-code", json=payload)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error generating frontend code: {response.text}")
+            return None
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return None
+
 # Initialize session state for feedback
 if "show_frontend_feedback" not in st.session_state:
     st.session_state.show_frontend_feedback = False
@@ -155,6 +177,38 @@ if st.session_state.analysis_result:
                 if st.button("❌ Cancel"):
                     st.session_state.show_frontend_feedback = False
                     st.rerun()
+    
+    # Frontend Code Generation Section
+    if result.get("frontend_srd"):
+        st.markdown("---")
+        st.header("🎨 Frontend Code Generation")
+        
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            frontend_project_name = st.text_input(
+                "Frontend Project Name", 
+                value="my_angular_app",
+                help="Name for your generated Angular project",
+                key="frontend_project_name"
+            )
+        
+        with col2:
+            st.write("")  # Spacing
+            st.write("")  # Spacing
+            if st.button("🎨 Generate Angular Code", type="secondary", key="generate_frontend"):
+                if frontend_project_name.strip():
+                    frontend_code_result = generate_frontend_code(result["frontend_srd"], frontend_project_name.strip())
+                    if frontend_code_result and frontend_code_result.get("success"):
+                        st.session_state.generated_frontend_code = frontend_code_result
+                        st.success(f"✅ {frontend_code_result['message']}")
+                        st.balloons()
+                    else:
+                        st.error("Failed to generate frontend code")
+                else:
+                    st.error("Please enter a frontend project name")
+    else:
+        st.info("Frontend SRD must be generated first before frontend code generation")
     
     st.markdown("---")
     
@@ -296,4 +350,92 @@ if st.session_state.get("generated_code"):
         - 🔗 **IntegrationAgent**: External service connections
         - 🗃️ **DatabaseMigrationAgent**: Database setup and migrations
         - 🎯 **CodeCoordinatorAgent**: Project structure and integration
+        """)
+
+# Display Generated Frontend Code
+if st.session_state.get("generated_frontend_code"):
+    frontend_code_result = st.session_state.generated_frontend_code
+    
+    st.markdown("---")
+    st.header("🎨 Generated Angular Frontend Code")
+    
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.success(f"📊 Generated {frontend_code_result.get('file_count', 0)} Angular files")
+        if frontend_code_result.get('project_path'):
+            st.info(f"📂 Angular project saved to: `{frontend_code_result['project_path']}`")
+        st.info(f"🏗️ Framework: {frontend_code_result.get('framework', 'Angular').title()}")
+    
+    with col2:
+        if st.button("📥 Download Angular ZIP", key="download_frontend"):
+            st.info("Frontend download feature available via API")
+    
+    with col3:
+        if st.button("🔄 Generate Frontend Again", key="regenerate_frontend"):
+            st.session_state.generated_frontend_code = None
+            st.rerun()
+    
+    # Show generated Angular files
+    if frontend_code_result.get("generated_files"):
+        st.subheader("Generated Angular Files Preview")
+        
+        # Create tabs for different file types
+        file_names = list(frontend_code_result["generated_files"].keys())
+        if file_names:
+            # Categorize files for better organization
+            ts_files = [f for f in file_names if f.endswith('.ts')]
+            html_files = [f for f in file_names if f.endswith('.html')]
+            scss_files = [f for f in file_names if f.endswith('.scss')]
+            json_files = [f for f in file_names if f.endswith('.json')]
+            other_files = [f for f in file_names if not any(f.endswith(ext) for ext in ['.ts', '.html', '.scss', '.json'])]
+            
+            # Show first few files from each category
+            display_files = ts_files[:2] + html_files[:2] + scss_files[:1] + json_files[:1] + other_files[:1]
+            display_files = display_files[:6]  # Limit to 6 tabs
+            
+            if display_files:
+                tabs = st.tabs([os.path.basename(f) for f in display_files])
+                
+                for i, file_path in enumerate(display_files):
+                    with tabs[i]:
+                        file_content = frontend_code_result["generated_files"][file_path]
+                        
+                        # Determine file type for syntax highlighting
+                        if file_path.endswith('.ts'):
+                            st.code(file_content, language='typescript')
+                        elif file_path.endswith('.html'):
+                            st.code(file_content, language='html')
+                        elif file_path.endswith('.scss'):
+                            st.code(file_content, language='scss')
+                        elif file_path.endswith('.json'):
+                            st.code(file_content, language='json')
+                        elif file_path.endswith('.md'):
+                            st.markdown(file_content)
+                        else:
+                            st.code(file_content)
+                
+                if len(file_names) > 6:
+                    st.info(f"Showing first 6 files. Total Angular files generated: {len(file_names)}")
+                
+                # File type breakdown
+                file_breakdown = f"""
+                **File Type Breakdown:**
+                - 📝 TypeScript files: {len(ts_files)}
+                - 🎨 HTML templates: {len(html_files)}
+                - 💄 SCSS styles: {len(scss_files)}
+                - ⚙️ JSON configs: {len(json_files)}
+                - 📄 Other files: {len(other_files)}
+                """
+                st.info(file_breakdown)
+        
+        # Angular agent contribution summary
+        st.subheader("🤖 Angular Multi-Agent Contributions")
+        st.info("""
+        **Generated by specialized Angular agents:**
+        - 🏗️ **ComponentDesignerAgent**: Angular components and TypeScript structure
+        - 🔧 **ServiceDeveloperAgent**: Angular services and HTTP clients
+        - 🎨 **UIImplementationAgent**: Templates, styles, and Angular Material UI
+        - 🗄️ **StateManagementAgent**: NgRx state management and reactive patterns
+        - 🎯 **FrontendCoordinatorAgent**: Angular project structure and configuration
         """)

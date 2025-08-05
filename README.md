@@ -8,7 +8,8 @@ A FastAPI application that uses AutoGen and OpenAI to analyze project documents 
 - **AI-Powered Analysis**: Uses AutoGen agents with OpenAI LLM for intelligent requirement extraction
 - **Dual SRD Generation**: Automatically generates separate SRDs for frontend and backend
 - **🔄 Feedback & Regeneration**: UserProxy agent processes user feedback to improve SRDs
-- **🚀 Backend Code Generation**: Multi-agent system generates complete backend code from SRDs
+- **🚀 Backend Code Generation**: Multi-agent system generates complete FastAPI backend code from SRDs
+- **🎨 Frontend Code Generation**: Multi-agent system generates complete Angular frontend code from SRDs
 - **RESTful API**: Clean API endpoints for integration
 - **Structured Output**: Well-formatted Markdown SRDs
 - **🎨 Streamlit UI**: Simple web interface for reviewing and approving SRDs
@@ -31,7 +32,13 @@ The application consists of:
    - IntegrationAgent for external service connections
    - DatabaseMigrationAgent for database setup and migrations
    - CodeCoordinatorAgent for project orchestration
-4. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
+4. **FrontendCodeGenerator**: Multi-agent Angular code generation system featuring:
+   - ComponentDesignerAgent for Angular components and TypeScript structure
+   - ServiceDeveloperAgent for Angular services and HTTP clients
+   - UIImplementationAgent for templates, styles, and Angular Material UI
+   - StateManagementAgent for NgRx state management and reactive patterns
+   - FrontendCoordinatorAgent for Angular project structure and configuration
+5. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
 
 ### Key Technologies:
 - **AutoGen 0.10.0**: Latest multi-agent conversation framework
@@ -138,6 +145,18 @@ GET /download-generated-code/{project_name}
 ```
 Download generated backend code as a ZIP file.
 
+### 8. Generate Frontend Code
+```http
+POST /generate-frontend-code
+```
+Generate complete Angular frontend code from Frontend SRD using multi-agent system.
+
+### 9. Download Generated Frontend
+```http
+GET /download-generated-frontend/{project_name}
+```
+Download generated Angular frontend code as a ZIP file.
+
 ## Usage Examples
 
 ### 🎨 Streamlit UI (Recommended)
@@ -162,10 +181,12 @@ Download generated backend code as a ZIP file.
    - Review the updated SRD and accept/reject again
 
 5. **Code generation workflow:**
-   - Enter a project name for your backend code
-   - Click "Generate Backend Code" to create complete backend application
-   - Review generated files with syntax highlighting
-   - Download the complete project as ZIP file
+   - Enter project names for frontend and backend code
+   - Click "Generate Angular Code" to create complete Angular application
+   - Click "Generate Backend Code" to create complete FastAPI application
+   - Review generated files with syntax highlighting and file categorization
+   - Download complete projects as ZIP files
+   - Deploy both frontend and backend for full-stack application
 
 ### 🔗 API Usage
 

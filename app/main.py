@@ -10,6 +10,7 @@ from typing import Dict
 from app.document_parser import DocumentParser
 from app.agents.requirement_analyzer import RequirementAnalyzer
 from app.agents.backend_code_generator import BackendCodeGenerator
+from app.agents.frontend_code_generator import FrontendCodeGenerator
 from app.models import (
     DocumentAnalysisRequest, 
     DocumentAnalysisResponse, 
@@ -18,7 +19,9 @@ from app.models import (
     RegenerateSRDRequest,
     RegenerateSRDResponse,
     CodeGenerationRequest,
-    CodeGenerationResponse
+    CodeGenerationResponse,
+    FrontendCodeGenerationRequest,
+    FrontendCodeGenerationResponse
 )
 
 # Create FastAPI app
@@ -41,6 +44,7 @@ app.add_middleware(
 document_parser = DocumentParser()
 requirement_analyzer = RequirementAnalyzer()
 backend_code_generator = BackendCodeGenerator()
+frontend_code_generator = FrontendCodeGenerator()
 
 # Create upload directory
 UPLOAD_DIR = "uploads"
@@ -318,6 +322,79 @@ async def download_generated_code(project_name: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating download: {str(e)}")
+
+@app.post("/generate-frontend-code", response_model=FrontendCodeGenerationResponse)
+async def generate_frontend_code(request: FrontendCodeGenerationRequest):
+    """
+    Generate complete Angular frontend code from Frontend SRD using multi-agent system
+    
+    Args:
+        request: Contains frontend_srd, project_name, framework, and output_format
+    """
+    try:
+        if not request.frontend_srd.strip():
+            raise HTTPException(status_code=400, detail="Frontend SRD cannot be empty")
+        
+        if request.framework and request.framework.lower() != "angular":
+            raise HTTPException(status_code=400, detail="Currently only Angular framework is supported")
+        
+        # Generate frontend code using multi-agent system
+        generated_files = await frontend_code_generator.generate_frontend_code(
+            frontend_srd=request.frontend_srd,
+            project_name=request.project_name or "generated_frontend"
+        )
+        
+        if "error" in generated_files:
+            raise HTTPException(status_code=500, detail=generated_files["error"])
+        
+        # Save generated files to disk
+        project_path = await frontend_code_generator.save_generated_code(
+            generated_files=generated_files,
+            output_dir="generated_frontend_projects"
+        )
+        
+        return FrontendCodeGenerationResponse(
+            success=True,
+            message=f"Successfully generated Angular frontend code for '{request.project_name}'",
+            project_path=project_path,
+            generated_files=generated_files if request.output_format == "files" else None,
+            file_count=len(generated_files),
+            framework="angular"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating frontend code: {str(e)}")
+
+@app.get("/download-generated-frontend/{project_name}")
+async def download_generated_frontend(project_name: str):
+    """
+    Download generated frontend code as a zip file
+    
+    Args:
+        project_name: Name of the generated Angular project
+    """
+    try:
+        project_path = Path("generated_frontend_projects") / project_name
+        
+        if not project_path.exists():
+            raise HTTPException(status_code=404, detail=f"Generated frontend project '{project_name}' not found")
+        
+        # Create a zip file
+        zip_path = f"generated_frontend_projects/{project_name}.zip"
+        shutil.make_archive(f"generated_frontend_projects/{project_name}", 'zip', project_path)
+        
+        return FileResponse(
+            path=zip_path,
+            filename=f"{project_name}.zip",
+            media_type="application/zip"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating frontend download: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

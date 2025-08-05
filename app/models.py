@@ -53,3 +53,19 @@ class CodeGenerationResponse(BaseModel):
     project_path: Optional[str] = None
     generated_files: Optional[Dict[str, str]] = None
     file_count: Optional[int] = None
+
+class FrontendCodeGenerationRequest(BaseModel):
+    """Request model for frontend code generation"""
+    frontend_srd: str
+    project_name: Optional[str] = "generated_frontend"
+    framework: Optional[str] = "angular"  # Currently supports "angular"
+    output_format: Optional[str] = "files"  # "files" or "zip"
+
+class FrontendCodeGenerationResponse(BaseModel):
+    """Response model for frontend code generation"""
+    success: bool
+    message: str
+    project_path: Optional[str] = None
+    generated_files: Optional[Dict[str, str]] = None
+    file_count: Optional[int] = None
+    framework: Optional[str] = None
