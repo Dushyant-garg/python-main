@@ -32,7 +32,8 @@ def main():
         "pyautogen==0.10.0",
         "autogen-agentchat==0.7.1",
         "autogen-ext[openai]==0.7.1",
-        "openai==1.58.1"
+        "openai==1.58.1",
+        "streamlit==1.41.1"
     ]
     
     for package in packages:

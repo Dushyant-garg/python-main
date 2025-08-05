@@ -57,7 +57,8 @@ def install_requirements():
         "pydantic==2.10.4",
         "aiofiles==24.1.0",
         "PyPDF2==3.1.0",
-        "python-docx==1.1.2"
+        "python-docx==1.1.2",
+        "streamlit==1.41.1"
     ]
     
     for package in packages:

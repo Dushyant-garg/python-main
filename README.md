@@ -9,6 +9,8 @@ A FastAPI application that uses AutoGen and OpenAI to analyze project documents 
 - **Dual SRD Generation**: Automatically generates separate SRDs for frontend and backend
 - **RESTful API**: Clean API endpoints for integration
 - **Structured Output**: Well-formatted Markdown SRDs
+- **🎨 Streamlit UI**: Simple web interface for reviewing and approving SRDs
+- **✅ Approval Workflow**: Accept or Reject buttons for each SRD
 
 ## Architecture
 
@@ -66,12 +68,21 @@ If you encounter dependency or import errors:
 
 ### Running the Application
 
-Start the FastAPI server:
+#### Option 1: Full Stack (UI + API)
+Run both FastAPI backend and Streamlit UI:
+```bash
+python run_ui.py
+```
+
+This will start:
+- 🔗 FastAPI Backend: http://localhost:8000
+- 🎨 Streamlit UI: http://localhost:8501
+
+#### Option 2: API Only
+Start just the FastAPI server:
 ```bash
 uvicorn app.main:app --reload
 ```
-
-The API will be available at `http://localhost:8000`
 
 ## API Endpoints
 
@@ -99,7 +110,25 @@ GET /srd-content/{file_type}?output_dir=output
 ```
 Retrieve generated SRD content (frontend or backend).
 
-## Usage Example
+## Usage Examples
+
+### 🎨 Streamlit UI (Recommended)
+
+1. **Start the application:**
+   ```bash
+   python run_ui.py
+   ```
+
+2. **Open your browser:**
+   Go to `http://localhost:8501`
+
+3. **Upload and review:**
+   - Upload a requirements document (PDF, DOCX, TXT)
+   - Click "Analyze Document"
+   - Review generated Frontend and Backend SRDs
+   - Click "Accept" or "Reject" for each SRD
+
+### 🔗 API Usage
 
 1. **Upload a Document**:
    ```bash
@@ -149,10 +178,13 @@ agents/
 │   └── agents/
 │       ├── __init__.py
 │       └── requirement_analyzer.py  # AutoGen agent system
-├── requirements.txt         # Python dependencies
-├── README.md               # This file
-├── uploads/                # Uploaded documents (created automatically)
-└── output/                 # Generated SRDs (created automatically)
+├── streamlit_ui.py          # Streamlit web interface
+├── run_ui.py               # Startup script for UI + API
+├── test_ui.py              # UI testing script
+├── requirements.txt        # Python dependencies
+├── README.md              # This file
+├── uploads/               # Uploaded documents (created automatically)
+└── output/                # Generated SRDs (created automatically)
 ```
 
 ## Environment Variables
