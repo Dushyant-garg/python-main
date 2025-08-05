@@ -60,6 +60,33 @@ if uploaded_file and st.button("Analyze Document"):
         st.session_state.analysis_result = result
         st.success("Document analyzed!")
 
+# Function to regenerate SRD with feedback
+def regenerate_srd(srd_type, feedback, original_result):
+    """Regenerate SRD with user feedback"""
+    try:
+        payload = {
+            "srd_type": srd_type,
+            "feedback": feedback,
+            "original_analysis": original_result.get("analysis_summary", "")
+        }
+        
+        response = requests.post(f"{API_BASE_URL}/regenerate-srd", json=payload)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error regenerating SRD: {response.text}")
+            return None
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return None
+
+# Initialize session state for feedback
+if "show_frontend_feedback" not in st.session_state:
+    st.session_state.show_frontend_feedback = False
+if "show_backend_feedback" not in st.session_state:
+    st.session_state.show_backend_feedback = False
+
 # Show SRDs if available
 if st.session_state.analysis_result:
     result = st.session_state.analysis_result
@@ -73,11 +100,39 @@ if st.session_state.analysis_result:
         st.markdown(frontend_srd)
     
     with col2:
-        if st.button("✅ Accept Frontend", type="primary"):
+        if st.button("✅ Accept Frontend", type="primary", key="accept_frontend"):
             st.success("Frontend SRD Accepted!")
         
-        if st.button("❌ Reject Frontend"):
-            st.error("Frontend SRD Rejected!")
+        if st.button("❌ Reject Frontend", key="reject_frontend"):
+            st.session_state.show_frontend_feedback = True
+    
+    # Frontend feedback section
+    if st.session_state.show_frontend_feedback:
+        with st.expander("🔍 Frontend Feedback", expanded=True):
+            frontend_feedback = st.text_area(
+                "What needs to be improved in the Frontend SRD?",
+                placeholder="Please specify what changes you'd like to see in the frontend requirements...",
+                key="frontend_feedback_input",
+                height=100
+            )
+            
+            col1, col2, col3 = st.columns([1, 1, 2])
+            with col1:
+                if st.button("🔄 Regenerate Frontend", type="primary"):
+                    if frontend_feedback.strip():
+                        with st.spinner("Regenerating Frontend SRD..."):
+                            regenerated = regenerate_srd("frontend", frontend_feedback, result)
+                            if regenerated:
+                                st.session_state.analysis_result["frontend_srd"] = regenerated["frontend_srd"]
+                                st.session_state.show_frontend_feedback = False
+                                st.rerun()
+                    else:
+                        st.error("Please provide feedback before regenerating")
+            
+            with col2:
+                if st.button("❌ Cancel"):
+                    st.session_state.show_frontend_feedback = False
+                    st.rerun()
     
     st.markdown("---")
     
@@ -90,8 +145,36 @@ if st.session_state.analysis_result:
         st.markdown(backend_srd)
     
     with col2:
-        if st.button("✅ Accept Backend", type="primary"):
+        if st.button("✅ Accept Backend", type="primary", key="accept_backend"):
             st.success("Backend SRD Accepted!")
         
-        if st.button("❌ Reject Backend"):
-            st.error("Backend SRD Rejected!")
+        if st.button("❌ Reject Backend", key="reject_backend"):
+            st.session_state.show_backend_feedback = True
+    
+    # Backend feedback section
+    if st.session_state.show_backend_feedback:
+        with st.expander("🔍 Backend Feedback", expanded=True):
+            backend_feedback = st.text_area(
+                "What needs to be improved in the Backend SRD?",
+                placeholder="Please specify what changes you'd like to see in the backend requirements...",
+                key="backend_feedback_input",
+                height=100
+            )
+            
+            col1, col2, col3 = st.columns([1, 1, 2])
+            with col1:
+                if st.button("🔄 Regenerate Backend", type="primary"):
+                    if backend_feedback.strip():
+                        with st.spinner("Regenerating Backend SRD..."):
+                            regenerated = regenerate_srd("backend", backend_feedback, result)
+                            if regenerated:
+                                st.session_state.analysis_result["backend_srd"] = regenerated["backend_srd"]
+                                st.session_state.show_backend_feedback = False
+                                st.rerun()
+                    else:
+                        st.error("Please provide feedback before regenerating")
+            
+            with col2:
+                if st.button("❌ Cancel"):
+                    st.session_state.show_backend_feedback = False
+                    st.rerun()

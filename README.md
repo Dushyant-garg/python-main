@@ -7,10 +7,11 @@ A FastAPI application that uses AutoGen and OpenAI to analyze project documents 
 - **Document Upload**: Support for PDF, DOCX, and TXT files
 - **AI-Powered Analysis**: Uses AutoGen agents with OpenAI LLM for intelligent requirement extraction
 - **Dual SRD Generation**: Automatically generates separate SRDs for frontend and backend
+- **🔄 Feedback & Regeneration**: UserProxy agent processes user feedback to improve SRDs
 - **RESTful API**: Clean API endpoints for integration
 - **Structured Output**: Well-formatted Markdown SRDs
 - **🎨 Streamlit UI**: Simple web interface for reviewing and approving SRDs
-- **✅ Approval Workflow**: Accept or Reject buttons for each SRD
+- **✅ Interactive Workflow**: Accept or Reject buttons with feedback integration
 
 ## Architecture
 
@@ -19,6 +20,7 @@ The application consists of:
 1. **Document Parser**: Extracts text from uploaded documents
 2. **RequirementAnalyzer Agent**: AutoGen 0.10.0-based multi-agent system that:
    - Uses specialized agents for analysis (RequirementAnalyst, FrontendSpecialist, BackendSpecialist)
+   - Includes UserProxy agent for processing feedback and coordinating regeneration
    - Leverages OpenAI's latest models through AutoGen's modern API
    - Generates comprehensive frontend and backend SRDs
 3. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
@@ -110,6 +112,12 @@ GET /srd-content/{file_type}?output_dir=output
 ```
 Retrieve generated SRD content (frontend or backend).
 
+### 5. Regenerate SRD with Feedback
+```http
+POST /regenerate-srd
+```
+Regenerate a specific SRD based on user feedback using the UserProxy agent.
+
 ## Usage Examples
 
 ### 🎨 Streamlit UI (Recommended)
@@ -126,7 +134,12 @@ Retrieve generated SRD content (frontend or backend).
    - Upload a requirements document (PDF, DOCX, TXT)
    - Click "Analyze Document"
    - Review generated Frontend and Backend SRDs
-   - Click "Accept" or "Reject" for each SRD
+   - Click "Accept" to approve or "Reject" to provide feedback
+
+4. **Feedback workflow (when rejecting):**
+   - Provide specific feedback in the text area
+   - Click "Regenerate" to get improved SRD using UserProxy agent
+   - Review the updated SRD and accept/reject again
 
 ### 🔗 API Usage
 

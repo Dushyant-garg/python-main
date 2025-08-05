@@ -43,6 +43,13 @@ class RequirementAnalyzer:
             model_client=self.model_client,
             system_message=self._get_backend_system_message(),
         )
+        
+        # Create the user proxy agent for feedback integration
+        self.user_proxy_agent = AssistantAgent(
+            name="UserProxy",
+            model_client=self.model_client,
+            system_message=self._get_user_proxy_system_message(),
+        )
     
     def _get_analyst_system_message(self) -> str:
         """Get system message for the requirement analyst"""
@@ -292,3 +299,82 @@ CRITICAL: Only use requirements marked as "BACKEND" by the RequirementAnalyst. D
             f.write(srd_content["backend_srd"])
         
         return frontend_path, backend_path
+    
+    def _get_user_proxy_system_message(self) -> str:
+        """Get system message for the user proxy agent"""
+        return """You are the UserProxy agent in a requirements analysis team. Your role is to process user feedback and coordinate with other agents to regenerate improved SRDs.
+
+RESPONSIBILITIES:
+1. Interpret user feedback and translate it into actionable requirements
+2. Coordinate with the appropriate specialist (Frontend or Backend) to regenerate content
+3. Ensure the new SRD addresses the user's specific concerns
+4. Maintain consistency with the original project requirements
+
+FEEDBACK PROCESSING WORKFLOW:
+1. Analyze user feedback to understand their concerns
+2. Identify which parts of the SRD need modification
+3. Provide clear, specific instructions to the relevant specialist
+4. Ensure the regenerated content maintains professional SRD standards
+
+OUTPUT FORMAT:
+Provide clear instructions to the appropriate specialist agent based on user feedback.
+Focus on specific, actionable changes rather than general improvements.
+"""
+
+    async def regenerate_srd_with_feedback(self, srd_type: str, feedback: str, original_analysis: str = "") -> Dict[str, str]:
+        """
+        Regenerate a specific SRD based on user feedback
+        
+        Args:
+            srd_type: Either "frontend" or "backend"
+            feedback: User feedback on what needs to be improved
+            original_analysis: Original analysis content for context
+            
+        Returns:
+            Dictionary containing the regenerated SRD content
+        """
+        
+        # Create feedback processing task
+        feedback_task = f"""
+USER FEEDBACK FOR {srd_type.upper()} SRD:
+{feedback}
+
+ORIGINAL ANALYSIS CONTEXT:
+{original_analysis[:1000] if original_analysis else "No original analysis available"}
+
+Please regenerate the {srd_type} SRD addressing the user's feedback while maintaining professional standards and consistency with the project requirements.
+"""
+
+        try:
+            # Select the appropriate specialist agent
+            specialist_agent = self.frontend_agent if srd_type == "frontend" else self.backend_agent
+            
+            # Create a focused team for feedback processing
+            feedback_team = RoundRobinGroupChat(
+                participants=[self.user_proxy_agent, specialist_agent],
+                termination_condition=MaxMessageTermination(4)  # Allow back-and-forth
+            )
+            
+            # Process the feedback
+            task_message = TextMessage(content=feedback_task, source="user")
+            result = await feedback_team.run(task=task_message)
+            
+            # Extract the regenerated content
+            regenerated_content = ""
+            for message in result.messages:
+                if hasattr(message, 'source') and message.source in ["FrontendSpecialist", "BackendSpecialist"]:
+                    if len(message.content) > len(regenerated_content):
+                        regenerated_content = message.content
+            
+            # Return the result
+            result_dict = {}
+            if srd_type == "frontend":
+                result_dict["frontend_srd"] = regenerated_content
+            else:
+                result_dict["backend_srd"] = regenerated_content
+                
+            return result_dict
+            
+        except Exception as e:
+            print(f"Error regenerating SRD: {str(e)}")
+            return {f"{srd_type}_srd": f"Error regenerating {srd_type} SRD: {str(e)}"}

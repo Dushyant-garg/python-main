@@ -13,7 +13,9 @@ from app.models import (
     DocumentAnalysisRequest, 
     DocumentAnalysisResponse, 
     SRDContent,
-    UploadResponse
+    UploadResponse,
+    RegenerateSRDRequest,
+    RegenerateSRDResponse
 )
 
 # Create FastAPI app
@@ -195,6 +197,54 @@ async def get_srd_content(file_type: str, output_dir: str = "output"):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving SRD content: {str(e)}")
+
+@app.post("/regenerate-srd", response_model=RegenerateSRDResponse)
+async def regenerate_srd(request: RegenerateSRDRequest):
+    """
+    Regenerate SRD based on user feedback
+    
+    Args:
+        request: Contains srd_type, feedback, and original analysis
+    """
+    try:
+        if request.srd_type not in ['frontend', 'backend']:
+            raise HTTPException(status_code=400, detail="srd_type must be 'frontend' or 'backend'")
+        
+        if not request.feedback.strip():
+            raise HTTPException(status_code=400, detail="Feedback cannot be empty")
+        
+        # Regenerate the SRD with feedback
+        result = await requirement_analyzer.regenerate_srd_with_feedback(
+            srd_type=request.srd_type,
+            feedback=request.feedback,
+            original_analysis=request.original_analysis or ""
+        )
+        
+        # Save the regenerated SRD to file
+        if request.srd_type == "frontend" and "frontend_srd" in result:
+            output_dir = "output"
+            Path(output_dir).mkdir(exist_ok=True)
+            file_path = os.path.join(output_dir, "srd_frontend.md")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(result["frontend_srd"])
+        elif request.srd_type == "backend" and "backend_srd" in result:
+            output_dir = "output"
+            Path(output_dir).mkdir(exist_ok=True)
+            file_path = os.path.join(output_dir, "srd_backend.md")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(result["backend_srd"])
+        
+        return RegenerateSRDResponse(
+            success=True,
+            message=f"Successfully regenerated {request.srd_type} SRD with user feedback",
+            frontend_srd=result.get("frontend_srd"),
+            backend_srd=result.get("backend_srd")
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error regenerating SRD: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

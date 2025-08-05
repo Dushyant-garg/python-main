@@ -26,3 +26,16 @@ class UploadResponse(BaseModel):
     message: str
     file_path: Optional[str] = None
     parsed_text_preview: Optional[str] = None
+
+class RegenerateSRDRequest(BaseModel):
+    """Request model for SRD regeneration with feedback"""
+    srd_type: str  # "frontend" or "backend"
+    feedback: str
+    original_analysis: Optional[str] = None
+
+class RegenerateSRDResponse(BaseModel):
+    """Response model for SRD regeneration"""
+    success: bool
+    message: str
+    frontend_srd: Optional[str] = None
+    backend_srd: Optional[str] = None
