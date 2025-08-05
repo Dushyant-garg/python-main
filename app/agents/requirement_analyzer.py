@@ -48,123 +48,187 @@ class RequirementAnalyzer:
         """Get system message for the requirement analyst"""
         return """You are a Senior Requirements Analyst specializing in analyzing project documents and extracting clear, actionable requirements.
 
-Your responsibilities:
-1. Analyze the provided document text thoroughly
-2. Identify functional and non-functional requirements
-3. Categorize requirements into frontend and backend components
-4. Ensure requirements are specific, measurable, and testable
-5. Extract user stories, business rules, and technical constraints
+CRITICAL: You must analyze and CATEGORIZE requirements clearly into FRONTEND and BACKEND sections.
 
-Focus on:
-- User interface requirements (frontend)
-- Business logic and data processing (backend)
-- Integration requirements
-- Performance and security considerations
-- Technology stack preferences mentioned in the document
+Your analysis must include:
 
-Provide a comprehensive analysis that will help frontend and backend specialists create detailed SRDs."""
+## FRONTEND REQUIREMENTS:
+- User Interface (UI) components and layouts
+- User Experience (UX) workflows and interactions
+- Client-side functionality and features
+- Responsive design and mobile considerations
+- User authentication flows (login/signup interfaces)
+- Form inputs, validations, and user feedback
+- Navigation menus, routing, and page structures
+- Data display and visualization requirements
+- Real-time updates and notifications (client-side)
+- Browser compatibility and accessibility
+
+## BACKEND REQUIREMENTS:
+- Server-side business logic and algorithms
+- Database design and data models
+- API endpoints and data processing
+- Authentication and authorization mechanisms
+- Server architecture and scalability
+- Data validation and security measures
+- Integration with external services
+- File handling and storage systems
+- Background jobs and scheduled tasks
+- Performance optimization and caching
+
+## INTEGRATION REQUIREMENTS:
+- API contracts between frontend and backend
+- Data exchange formats and protocols
+- Third-party service integrations
+- Security protocols and encryption
+
+Provide a STRUCTURED analysis with clear separation between frontend and backend concerns. Be specific about what belongs to each domain."""
     
     def _get_frontend_system_message(self) -> str:
         """Get system message for the frontend specialist"""
-        return """You are a Frontend Architecture Specialist responsible for creating detailed Software Requirements Documents for frontend components.
+        return """You are a Frontend Architecture Specialist. FOCUS EXCLUSIVELY on CLIENT-SIDE requirements.
 
-Your task is to generate a comprehensive SRD for frontend development that includes:
+IGNORE backend/server concerns. You ONLY handle:
+- User Interface (UI) design and components
+- User Experience (UX) flows and interactions
+- Client-side functionality and JavaScript behavior
+- Frontend frameworks and libraries
+- Browser rendering and compatibility
+- Responsive design and mobile interfaces
 
-## Frontend SRD Structure:
-1. **Project Overview**
-   - Purpose and scope of the frontend application
-   - Target users and use cases
+Create a FRONTEND-ONLY SRD with this structure:
 
-2. **Functional Requirements**
-   - User interface requirements
-   - User interaction flows
-   - Form validations and inputs
-   - Navigation structure
-   - Content management
+# Frontend Software Requirements Document
 
-3. **Technical Requirements**
-   - Technology stack (React, Vue, Angular, etc.)
-   - Browser compatibility
-   - Responsive design requirements
-   - Accessibility standards (WCAG compliance)
+## 1. User Interface Requirements
+- Layout and visual design specifications
+- Component library and design system
+- Navigation and menu structures
+- Forms, inputs, and user controls
+- Modal dialogs and overlays
+- Loading states and feedback
 
-4. **Design Requirements**
-   - UI/UX guidelines
-   - Visual design principles
-   - Component library specifications
-   - Theming and branding
+## 2. User Experience Requirements
+- User workflows and interaction patterns
+- Page transitions and routing
+- Form validation and error handling
+- Accessibility features (ARIA, keyboard navigation)
+- Responsive breakpoints and mobile experience
+- Offline functionality and PWA features
 
-5. **Performance Requirements**
-   - Page load times
-   - Bundle size constraints
-   - SEO requirements
+## 3. Client-Side Functionality
+- Frontend state management
+- Data fetching and caching strategies
+- Real-time updates (WebSocket handling)
+- File upload interfaces
+- Search and filtering capabilities
+- Client-side validation logic
 
-6. **Integration Requirements**
-   - API endpoints to consume
-   - Authentication integration
-   - Third-party service integrations
+## 4. Technology Stack
+- Frontend framework (React, Vue, Angular, etc.)
+- State management libraries
+- CSS frameworks and styling approach
+- Build tools and bundlers
+- Testing frameworks for frontend
+- Browser compatibility requirements
 
-7. **Testing Requirements**
-   - Unit testing frameworks
-   - E2E testing requirements
-   - Cross-browser testing
+## 5. Performance Requirements
+- Page load time targets
+- Bundle size optimization
+- Code splitting strategies
+- Image optimization and lazy loading
+- Caching strategies (browser cache)
+- Core Web Vitals targets
 
-Generate a detailed, professional SRD in Markdown format."""
+## 6. API Integration
+- REST API consumption patterns
+- Error handling for API calls
+- Authentication token management
+- Data transformation and formatting
+- API response caching
+
+Generate ONLY frontend-specific requirements. Do NOT include server, database, or backend logic."""
     
     def _get_backend_system_message(self) -> str:
         """Get system message for the backend specialist"""
-        return """You are a Backend Architecture Specialist responsible for creating detailed Software Requirements Documents for backend systems.
+        return """You are a Backend Architecture Specialist. FOCUS EXCLUSIVELY on SERVER-SIDE requirements.
 
-Your task is to generate a comprehensive SRD for backend development that includes:
+IGNORE frontend/UI concerns. You ONLY handle:
+- Server-side business logic and algorithms
+- Database design and data persistence
+- API development and web services
+- Authentication and authorization systems
+- Server infrastructure and deployment
+- Data processing and background jobs
 
-## Backend SRD Structure:
-1. **System Overview**
-   - Purpose and scope of the backend system
-   - High-level architecture
-   - System boundaries
+Create a BACKEND-ONLY SRD with this structure:
 
-2. **Functional Requirements**
-   - Business logic requirements
-   - Data processing workflows
-   - API specifications
-   - Integration requirements
+# Backend Software Requirements Document
 
-3. **Technical Requirements**
-   - Technology stack (Python/FastAPI, Node.js, Java, etc.)
-   - Database requirements (SQL/NoSQL)
-   - Caching strategies
-   - Message queues or event processing
+## 1. System Architecture
+- Server architecture and design patterns
+- Microservices vs monolithic approach
+- Load balancing and scaling strategies
+- Service mesh and communication patterns
+- Deployment architecture (containers, cloud)
 
-4. **Data Requirements**
-   - Data models and schemas
-   - Data validation rules
-   - Data migration requirements
-   - Backup and recovery
+## 2. Database Requirements
+- Database design and schema specifications
+- Data models and entity relationships
+- Database choice (SQL/NoSQL) with justification
+- Data migration and versioning strategies
+- Backup and disaster recovery procedures
+- Data retention and archival policies
 
-5. **API Requirements**
-   - RESTful API specifications
-   - Authentication and authorization
-   - Rate limiting and throttling
-   - API versioning strategy
+## 3. API Specifications
+- REST API endpoint definitions
+- Request/response schemas and data formats
+- API versioning and backward compatibility
+- Rate limiting and throttling mechanisms
+- API documentation and OpenAPI specs
+- GraphQL schema (if applicable)
 
-6. **Performance Requirements**
-   - Response time requirements
-   - Throughput expectations
-   - Scalability requirements
-   - Concurrent user support
+## 4. Business Logic Requirements
+- Core business rules and algorithms
+- Data processing workflows
+- Validation and business rule enforcement
+- Calculation engines and complex operations
+- Integration with external services
+- Event processing and message handling
 
-7. **Security Requirements**
-   - Authentication mechanisms
-   - Authorization levels
-   - Data encryption
-   - Security compliance standards
+## 5. Authentication & Authorization
+- User authentication mechanisms (JWT, OAuth, etc.)
+- Role-based access control (RBAC)
+- Permission systems and policy enforcement
+- Session management and token handling
+- Multi-factor authentication requirements
+- Security audit trails
 
-8. **Infrastructure Requirements**
-   - Deployment architecture
-   - Monitoring and logging
-   - DevOps and CI/CD requirements
+## 6. Performance & Scalability
+- Response time and throughput requirements
+- Horizontal and vertical scaling strategies
+- Caching mechanisms (Redis, Memcached)
+- Database query optimization
+- Background job processing
+- Load testing and performance monitoring
 
-Generate a detailed, professional SRD in Markdown format."""
+## 7. Infrastructure & DevOps
+- Server provisioning and configuration
+- CI/CD pipeline requirements
+- Monitoring and alerting systems
+- Logging and error tracking
+- Backup and disaster recovery
+- Security scanning and compliance
+
+## 8. Integration Requirements
+- Third-party API integrations
+- Message queues and event systems
+- File storage and content delivery
+- Email and notification services
+- Payment processing systems
+- Analytics and reporting services
+
+Generate ONLY backend/server-side requirements. Do NOT include UI, frontend frameworks, or client-side logic."""
     
     async def analyze_requirements(self, document_text: str) -> Dict[str, str]:
         """
@@ -179,15 +243,43 @@ Generate a detailed, professional SRD in Markdown format."""
         
         # Step 1: Analyze requirements with the analyst agent
         analysis_prompt = f"""
-        Please analyze the following project document and extract comprehensive requirements:
+        REQUIREMENTS ANALYST TASK: Analyze the following project document and categorize ALL requirements clearly.
 
+        PROJECT DOCUMENT:
         {document_text}
 
-        Provide a detailed analysis categorizing requirements into:
-        1. Frontend requirements (UI, UX, user interactions)
-        2. Backend requirements (business logic, data processing, APIs)
-        3. Integration requirements
-        4. Technical constraints and preferences
+        CRITICAL: You must provide a STRUCTURED analysis that clearly separates frontend and backend concerns. Use the following format:
+
+        # REQUIREMENTS ANALYSIS
+
+        ## FRONTEND REQUIREMENTS
+        List ALL client-side, UI, and user experience requirements including:
+        - User interface components and layouts
+        - User interaction workflows and experiences  
+        - Client-side functionality and features
+        - Form designs and user input handling
+        - Navigation and routing requirements
+        - Responsive design and mobile considerations
+        - Frontend performance and optimization needs
+
+        ## BACKEND REQUIREMENTS  
+        List ALL server-side, database, and system architecture requirements including:
+        - Server-side business logic and algorithms
+        - Database design and data storage needs
+        - API endpoints and web service specifications
+        - Authentication and authorization systems
+        - Server architecture and scalability requirements
+        - Data processing and background job requirements
+        - Integration with external services and APIs
+
+        ## SHARED/INTEGRATION REQUIREMENTS
+        List requirements that involve both frontend and backend:
+        - API contracts and data exchange formats
+        - Authentication flows and security protocols
+        - Real-time communication requirements
+        - File upload/download workflows
+
+        Ensure each requirement is placed in the correct category and be specific about implementation domains.
         """
         
         # Create task message for analysis
@@ -205,11 +297,26 @@ Generate a detailed, professional SRD in Markdown format."""
         
         # Step 2: Generate frontend SRD
         frontend_prompt = f"""
-        Based on the following requirements analysis, generate a detailed Frontend Software Requirements Document (SRD):
+        FRONTEND SPECIALIST TASK: Create a detailed Frontend SRD document.
 
+        CRITICAL INSTRUCTIONS:
+        - Focus ONLY on client-side, user interface, and user experience requirements
+        - DO NOT include backend, server, database, or API implementation details
+        - Extract ONLY frontend-related requirements from the analysis below
+
+        REQUIREMENTS ANALYSIS:
         {analysis_content}
 
-        Please create a comprehensive frontend SRD that covers all aspects of the user interface and user experience requirements.
+        DELIVERABLE: Create a comprehensive Frontend Software Requirements Document that focuses exclusively on:
+        1. User Interface components and layouts
+        2. User Experience workflows and interactions
+        3. Client-side functionality and JavaScript behavior
+        4. Frontend technology stack and frameworks
+        5. Browser compatibility and responsive design
+        6. Frontend performance and optimization
+        7. API consumption patterns (client-side perspective only)
+
+        Generate a professional SRD document in markdown format with detailed frontend specifications.
         """
         
         frontend_task = TextMessage(content=frontend_prompt, source="user")
@@ -223,11 +330,27 @@ Generate a detailed, professional SRD in Markdown format."""
         
         # Step 3: Generate backend SRD
         backend_prompt = f"""
-        Based on the following requirements analysis, generate a detailed Backend Software Requirements Document (SRD):
+        BACKEND SPECIALIST TASK: Create a detailed Backend SRD document.
 
+        CRITICAL INSTRUCTIONS:
+        - Focus ONLY on server-side, database, and system architecture requirements
+        - DO NOT include frontend, UI, or client-side implementation details
+        - Extract ONLY backend-related requirements from the analysis below
+
+        REQUIREMENTS ANALYSIS:
         {analysis_content}
 
-        Please create a comprehensive backend SRD that covers all aspects of the server-side architecture and business logic requirements.
+        DELIVERABLE: Create a comprehensive Backend Software Requirements Document that focuses exclusively on:
+        1. Server architecture and system design patterns
+        2. Database design, schemas, and data models
+        3. API specifications and web service definitions
+        4. Business logic and server-side algorithms
+        5. Authentication, authorization, and security systems
+        6. Performance, scalability, and infrastructure requirements
+        7. Integration with external services and third-party APIs
+        8. DevOps, deployment, and monitoring requirements
+
+        Generate a professional SRD document in markdown format with detailed backend specifications.
         """
         
         backend_task = TextMessage(content=backend_prompt, source="user")
