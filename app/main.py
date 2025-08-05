@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import tempfile
@@ -9,13 +9,16 @@ from typing import Dict
 
 from app.document_parser import DocumentParser
 from app.agents.requirement_analyzer import RequirementAnalyzer
+from app.agents.backend_code_generator import BackendCodeGenerator
 from app.models import (
     DocumentAnalysisRequest, 
     DocumentAnalysisResponse, 
     SRDContent,
     UploadResponse,
     RegenerateSRDRequest,
-    RegenerateSRDResponse
+    RegenerateSRDResponse,
+    CodeGenerationRequest,
+    CodeGenerationResponse
 )
 
 # Create FastAPI app
@@ -37,6 +40,7 @@ app.add_middleware(
 # Initialize components
 document_parser = DocumentParser()
 requirement_analyzer = RequirementAnalyzer()
+backend_code_generator = BackendCodeGenerator()
 
 # Create upload directory
 UPLOAD_DIR = "uploads"
@@ -245,6 +249,75 @@ async def regenerate_srd(request: RegenerateSRDRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error regenerating SRD: {str(e)}")
+
+@app.post("/generate-backend-code", response_model=CodeGenerationResponse)
+async def generate_backend_code(request: CodeGenerationRequest):
+    """
+    Generate complete backend code from Backend SRD using multi-agent system
+    
+    Args:
+        request: Contains backend_srd, project_name, and output_format
+    """
+    try:
+        if not request.backend_srd.strip():
+            raise HTTPException(status_code=400, detail="Backend SRD cannot be empty")
+        
+        # Generate backend code using multi-agent system
+        generated_files = await backend_code_generator.generate_backend_code(
+            backend_srd=request.backend_srd,
+            project_name=request.project_name or "generated_backend"
+        )
+        
+        if "error" in generated_files:
+            raise HTTPException(status_code=500, detail=generated_files["error"])
+        
+        # Save generated files to disk
+        project_path = await backend_code_generator.save_generated_code(
+            generated_files=generated_files,
+            output_dir="generated_projects"
+        )
+        
+        return CodeGenerationResponse(
+            success=True,
+            message=f"Successfully generated backend code for '{request.project_name}'",
+            project_path=project_path,
+            generated_files=generated_files if request.output_format == "files" else None,
+            file_count=len(generated_files)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating backend code: {str(e)}")
+
+@app.get("/download-generated-code/{project_name}")
+async def download_generated_code(project_name: str):
+    """
+    Download generated code as a zip file
+    
+    Args:
+        project_name: Name of the generated project
+    """
+    try:
+        project_path = Path("generated_projects") / project_name
+        
+        if not project_path.exists():
+            raise HTTPException(status_code=404, detail=f"Generated project '{project_name}' not found")
+        
+        # Create a zip file
+        zip_path = f"generated_projects/{project_name}.zip"
+        shutil.make_archive(f"generated_projects/{project_name}", 'zip', project_path)
+        
+        return FileResponse(
+            path=zip_path,
+            filename=f"{project_name}.zip",
+            media_type="application/zip"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating download: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

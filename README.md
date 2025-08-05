@@ -8,6 +8,7 @@ A FastAPI application that uses AutoGen and OpenAI to analyze project documents 
 - **AI-Powered Analysis**: Uses AutoGen agents with OpenAI LLM for intelligent requirement extraction
 - **Dual SRD Generation**: Automatically generates separate SRDs for frontend and backend
 - **🔄 Feedback & Regeneration**: UserProxy agent processes user feedback to improve SRDs
+- **🚀 Backend Code Generation**: Multi-agent system generates complete backend code from SRDs
 - **RESTful API**: Clean API endpoints for integration
 - **Structured Output**: Well-formatted Markdown SRDs
 - **🎨 Streamlit UI**: Simple web interface for reviewing and approving SRDs
@@ -23,7 +24,14 @@ The application consists of:
    - Includes UserProxy agent for processing feedback and coordinating regeneration
    - Leverages OpenAI's latest models through AutoGen's modern API
    - Generates comprehensive frontend and backend SRDs
-3. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
+3. **BackendCodeGenerator**: Multi-agent code generation system featuring:
+   - APIDesignerAgent for REST endpoint design
+   - ModelDeveloperAgent for database models and schemas
+   - BusinessLogicAgent for core functionality implementation
+   - IntegrationAgent for external service connections
+   - DatabaseMigrationAgent for database setup and migrations
+   - CodeCoordinatorAgent for project orchestration
+4. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
 
 ### Key Technologies:
 - **AutoGen 0.10.0**: Latest multi-agent conversation framework
@@ -118,6 +126,18 @@ POST /regenerate-srd
 ```
 Regenerate a specific SRD based on user feedback using the UserProxy agent.
 
+### 6. Generate Backend Code
+```http
+POST /generate-backend-code
+```
+Generate complete backend code from Backend SRD using multi-agent system.
+
+### 7. Download Generated Code
+```http
+GET /download-generated-code/{project_name}
+```
+Download generated backend code as a ZIP file.
+
 ## Usage Examples
 
 ### 🎨 Streamlit UI (Recommended)
@@ -140,6 +160,12 @@ Regenerate a specific SRD based on user feedback using the UserProxy agent.
    - Provide specific feedback in the text area
    - Click "Regenerate" to get improved SRD using UserProxy agent
    - Review the updated SRD and accept/reject again
+
+5. **Code generation workflow:**
+   - Enter a project name for your backend code
+   - Click "Generate Backend Code" to create complete backend application
+   - Review generated files with syntax highlighting
+   - Download the complete project as ZIP file
 
 ### 🔗 API Usage
 

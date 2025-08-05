@@ -39,3 +39,17 @@ class RegenerateSRDResponse(BaseModel):
     message: str
     frontend_srd: Optional[str] = None
     backend_srd: Optional[str] = None
+
+class CodeGenerationRequest(BaseModel):
+    """Request model for backend code generation"""
+    backend_srd: str
+    project_name: Optional[str] = "generated_backend"
+    output_format: Optional[str] = "files"  # "files" or "zip"
+
+class CodeGenerationResponse(BaseModel):
+    """Response model for backend code generation"""
+    success: bool
+    message: str
+    project_path: Optional[str] = None
+    generated_files: Optional[Dict[str, str]] = None
+    file_count: Optional[int] = None
