@@ -125,6 +125,31 @@ def generate_frontend_code(frontend_srd, project_name):
         st.error(f"Error: {str(e)}")
         return None
 
+def generate_fullstack_integration(frontend_srd, backend_srd, project_name):
+    """Generate integrated full-stack application"""
+    try:
+        payload = {
+            "frontend_srd": frontend_srd,
+            "backend_srd": backend_srd,
+            "project_name": project_name,
+            "frontend_framework": "angular",
+            "include_docker": True,
+            "include_auth": True,
+            "output_format": "files"
+        }
+        
+        with st.spinner("Generating integrated full-stack application..."):
+            response = requests.post(f"{API_BASE_URL}/generate-fullstack-integration", json=payload, timeout=600)
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            st.error(f"Error generating full-stack integration: {response.text}")
+            return None
+    except Exception as e:
+        st.error(f"Error: {str(e)}")
+        return None
+
 # Initialize session state for feedback
 if "show_frontend_feedback" not in st.session_state:
     st.session_state.show_frontend_feedback = False
@@ -286,6 +311,53 @@ if st.session_state.analysis_result:
     else:
         st.info("Backend SRD must be generated first before code generation")
 
+    # Full-Stack Integration Section
+    if result.get("frontend_srd") and result.get("backend_srd"):
+        st.markdown("---")
+        st.header("🌐 Full-Stack Integration")
+        
+        st.info("🚀 **Generate Complete Integrated Application**: Creates Angular frontend + FastAPI backend + Docker + Authentication + API Integration")
+        
+        col1, col2 = st.columns([3, 1])
+        
+        with col1:
+            fullstack_project_name = st.text_input(
+                "Full-Stack Project Name", 
+                value="my_fullstack_app",
+                help="Name for your integrated full-stack application",
+                key="fullstack_project_name"
+            )
+            
+            # Integration options
+            with st.expander("🔧 Integration Options", expanded=False):
+                include_docker = st.checkbox("Include Docker configuration", value=True, key="include_docker")
+                include_auth = st.checkbox("Include JWT authentication integration", value=True, key="include_auth")
+                include_cors = st.checkbox("Include CORS configuration", value=True, key="include_cors")
+        
+        with col2:
+            st.write("")  # Spacing
+            st.write("")  # Spacing
+            if st.button("🌐 Generate Full-Stack App", type="primary", key="generate_fullstack"):
+                if fullstack_project_name.strip():
+                    fullstack_result = generate_fullstack_integration(
+                        result["frontend_srd"], 
+                        result["backend_srd"], 
+                        fullstack_project_name.strip()
+                    )
+                    if fullstack_result and fullstack_result.get("success"):
+                        st.session_state.generated_fullstack = fullstack_result
+                        st.success(f"✅ {fullstack_result['message']}")
+                        st.balloons()
+                    else:
+                        st.error("Failed to generate full-stack integration")
+                else:
+                    st.error("Please enter a full-stack project name")
+    else:
+        if not result.get("frontend_srd") or not result.get("backend_srd"):
+            st.markdown("---")
+            st.header("🌐 Full-Stack Integration")
+            st.info("Both Frontend and Backend SRDs must be generated first for full-stack integration")
+
 # Display Generated Code
 if st.session_state.get("generated_code"):
     code_result = st.session_state.generated_code
@@ -439,3 +511,118 @@ if st.session_state.get("generated_frontend_code"):
         - 🗄️ **StateManagementAgent**: NgRx state management and reactive patterns
         - 🎯 **FrontendCoordinatorAgent**: Angular project structure and configuration
         """)
+
+# Display Generated Full-Stack Integration
+if st.session_state.get("generated_fullstack"):
+    fullstack_result = st.session_state.generated_fullstack
+    
+    st.markdown("---")
+    st.header("🌐 Generated Full-Stack Integration")
+    
+    col1, col2, col3 = st.columns([2, 1, 1])
+    
+    with col1:
+        st.success(f"🎉 Complete Full-Stack Application Generated!")
+        if fullstack_result.get('project_path'):
+            st.info(f"📂 Project saved to: `{fullstack_result['project_path']}`")
+        
+        # File count breakdown
+        file_breakdown = f"""
+        **📊 Generated Files:**
+        - 🎨 Frontend: {fullstack_result.get('frontend_file_count', 0)} files
+        - 🚀 Backend: {fullstack_result.get('backend_file_count', 0)} files  
+        - 🔗 Integration: {fullstack_result.get('integration_file_count', 0)} files
+        - 📁 **Total: {fullstack_result.get('total_file_count', 0)} files**
+        """
+        st.info(file_breakdown)
+    
+    with col2:
+        if st.button("📥 Download Full-Stack ZIP", key="download_fullstack"):
+            st.info("Full-stack download feature available via API")
+    
+    with col3:
+        if st.button("🔄 Generate Again", key="regenerate_fullstack"):
+            st.session_state.generated_fullstack = None
+            st.rerun()
+    
+    # Integration features summary
+    st.subheader("🔗 Integration Features")
+    
+    integration_features = """
+    ✅ **API Integration**: Angular services consume FastAPI endpoints  
+    ✅ **Authentication Flow**: JWT-based auth between frontend and backend  
+    ✅ **CORS Configuration**: Proper cross-origin request handling  
+    ✅ **Docker Setup**: Complete containerization with docker-compose  
+    ✅ **Environment Config**: Development and production configurations  
+    ✅ **Type Safety**: TypeScript interfaces matching Pydantic models  
+    ✅ **Error Handling**: Consistent error responses and frontend handling  
+    ✅ **Development Workflow**: Auto-reload and hot-reload for both services  
+    """
+    
+    st.success(integration_features)
+    
+    # Deployment instructions
+    with st.expander("🚀 Deployment Instructions", expanded=False):
+        deployment_instructions = f"""
+        ### Quick Start with Docker
+
+        ```bash
+        # Navigate to your project
+        cd {fullstack_result.get('project_path', 'your-project')}
+
+        # Start the full-stack application
+        docker-compose up --build
+
+        # Access your application
+        # Frontend: http://localhost:4200
+        # Backend API: http://localhost:8000  
+        # API Docs: http://localhost:8000/docs
+        ```
+
+        ### Manual Development Setup
+
+        #### Backend (FastAPI)
+        ```bash
+        cd backend
+        pip install -r requirements.txt
+        uvicorn main:app --reload
+        ```
+
+        #### Frontend (Angular)
+        ```bash
+        cd frontend
+        npm install
+        ng serve
+        ```
+
+        ### Key Integration Points
+
+        1. **API Communication**: Angular HTTP services are pre-configured to consume FastAPI endpoints
+        2. **Authentication**: JWT tokens are automatically handled by Angular interceptors
+        3. **CORS**: Backend is configured to allow requests from the Angular development server
+        4. **Environment Variables**: Both frontend and backend use environment-specific configurations
+        5. **Docker Networking**: Containers are networked to communicate seamlessly
+        """
+        
+        st.markdown(deployment_instructions)
+    
+    # Multi-agent contribution summary
+    st.subheader("🤖 Complete Multi-Agent System")
+    
+    agent_summary = """
+    **🌟 15 AI Agents worked together to create your full-stack application:**
+    
+    **📋 Requirements Analysis (4 agents):**
+    - RequirementAnalyst, FrontendSpecialist, BackendSpecialist, UserProxy
+    
+    **🎨 Angular Frontend (5 agents):**
+    - ComponentDesignerAgent, ServiceDeveloperAgent, UIImplementationAgent, StateManagementAgent, FrontendCoordinatorAgent
+    
+    **🚀 FastAPI Backend (6 agents):**
+    - APIDesignerAgent, ModelDeveloperAgent, BusinessLogicAgent, IntegrationAgent, DatabaseMigrationAgent, CodeCoordinatorAgent
+    
+    **🔗 Full-Stack Integration (4 agents):**
+    - APIIntegrationAgent, AuthIntegrationAgent, DeploymentCoordinatorAgent, IntegrationCoordinatorAgent
+    """
+    
+    st.info(agent_summary)

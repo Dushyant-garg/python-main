@@ -11,6 +11,7 @@ from app.document_parser import DocumentParser
 from app.agents.requirement_analyzer import RequirementAnalyzer
 from app.agents.backend_code_generator import BackendCodeGenerator
 from app.agents.frontend_code_generator import FrontendCodeGenerator
+from app.agents.integration_coordinator import IntegrationCoordinator
 from app.models import (
     DocumentAnalysisRequest, 
     DocumentAnalysisResponse, 
@@ -21,7 +22,9 @@ from app.models import (
     CodeGenerationRequest,
     CodeGenerationResponse,
     FrontendCodeGenerationRequest,
-    FrontendCodeGenerationResponse
+    FrontendCodeGenerationResponse,
+    FullStackIntegrationRequest,
+    FullStackIntegrationResponse
 )
 
 # Create FastAPI app
@@ -45,6 +48,7 @@ document_parser = DocumentParser()
 requirement_analyzer = RequirementAnalyzer()
 backend_code_generator = BackendCodeGenerator()
 frontend_code_generator = FrontendCodeGenerator()
+integration_coordinator = IntegrationCoordinator()
 
 # Create upload directory
 UPLOAD_DIR = "uploads"
@@ -395,6 +399,106 @@ async def download_generated_frontend(project_name: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating frontend download: {str(e)}")
+
+@app.post("/generate-fullstack-integration", response_model=FullStackIntegrationResponse)
+async def generate_fullstack_integration(request: FullStackIntegrationRequest):
+    """
+    Generate complete integrated full-stack application with frontend, backend, and integration layer
+    
+    Args:
+        request: Contains frontend_srd, backend_srd, project_name, and integration options
+    """
+    try:
+        if not request.frontend_srd.strip():
+            raise HTTPException(status_code=400, detail="Frontend SRD cannot be empty")
+        
+        if not request.backend_srd.strip():
+            raise HTTPException(status_code=400, detail="Backend SRD cannot be empty")
+        
+        # Generate frontend code
+        frontend_files = await frontend_code_generator.generate_frontend_code(
+            frontend_srd=request.frontend_srd,
+            project_name=f"{request.project_name}_frontend"
+        )
+        
+        if "error" in frontend_files:
+            raise HTTPException(status_code=500, detail=f"Frontend generation failed: {frontend_files['error']}")
+        
+        # Generate backend code
+        backend_files = await backend_code_generator.generate_backend_code(
+            backend_srd=request.backend_srd,
+            project_name=f"{request.project_name}_backend"
+        )
+        
+        if "error" in backend_files:
+            raise HTTPException(status_code=500, detail=f"Backend generation failed: {backend_files['error']}")
+        
+        # Generate integration package
+        integrated_package = await integration_coordinator.generate_integration_package(
+            frontend_files=frontend_files,
+            backend_files=backend_files,
+            project_name=request.project_name
+        )
+        
+        if "error" in integrated_package:
+            raise HTTPException(status_code=500, detail=integrated_package["error"])
+        
+        # Save integrated package to disk
+        project_path = await integration_coordinator.save_integrated_package(
+            integrated_files=integrated_package,
+            output_dir="integrated_projects"
+        )
+        
+        # Calculate file counts
+        frontend_count = len(frontend_files)
+        backend_count = len(backend_files)
+        total_count = len(integrated_package)
+        integration_count = total_count - frontend_count - backend_count
+        
+        return FullStackIntegrationResponse(
+            success=True,
+            message=f"Successfully generated integrated full-stack application '{request.project_name}'",
+            project_path=project_path,
+            frontend_file_count=frontend_count,
+            backend_file_count=backend_count,
+            integration_file_count=integration_count,
+            total_file_count=total_count,
+            generated_files=integrated_package if request.output_format == "files" else None
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating full-stack integration: {str(e)}")
+
+@app.get("/download-integrated-project/{project_name}")
+async def download_integrated_project(project_name: str):
+    """
+    Download integrated full-stack project as a zip file
+    
+    Args:
+        project_name: Name of the integrated project
+    """
+    try:
+        project_path = Path("integrated_projects") / project_name
+        
+        if not project_path.exists():
+            raise HTTPException(status_code=404, detail=f"Integrated project '{project_name}' not found")
+        
+        # Create a zip file
+        zip_path = f"integrated_projects/{project_name}.zip"
+        shutil.make_archive(f"integrated_projects/{project_name}", 'zip', project_path)
+        
+        return FileResponse(
+            path=zip_path,
+            filename=f"{project_name}_fullstack.zip",
+            media_type="application/zip"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating integrated project download: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

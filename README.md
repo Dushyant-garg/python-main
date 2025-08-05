@@ -10,6 +10,7 @@ A FastAPI application that uses AutoGen and OpenAI to analyze project documents 
 - **🔄 Feedback & Regeneration**: UserProxy agent processes user feedback to improve SRDs
 - **🚀 Backend Code Generation**: Multi-agent system generates complete FastAPI backend code from SRDs
 - **🎨 Frontend Code Generation**: Multi-agent system generates complete Angular frontend code from SRDs
+- **🌐 Full-Stack Integration**: Automated integration between Angular frontend and FastAPI backend with Docker, authentication, and API coordination
 - **RESTful API**: Clean API endpoints for integration
 - **Structured Output**: Well-formatted Markdown SRDs
 - **🎨 Streamlit UI**: Simple web interface for reviewing and approving SRDs
@@ -38,7 +39,12 @@ The application consists of:
    - UIImplementationAgent for templates, styles, and Angular Material UI
    - StateManagementAgent for NgRx state management and reactive patterns
    - FrontendCoordinatorAgent for Angular project structure and configuration
-5. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
+5. **IntegrationCoordinator**: Full-stack integration system featuring:
+   - APIIntegrationAgent for Angular-FastAPI API communication
+   - AuthIntegrationAgent for JWT authentication flow coordination
+   - DeploymentCoordinatorAgent for Docker and deployment configurations
+   - IntegrationCoordinatorAgent for overall system orchestration
+6. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
 
 ### Key Technologies:
 - **AutoGen 0.10.0**: Latest multi-agent conversation framework
@@ -157,6 +163,18 @@ GET /download-generated-frontend/{project_name}
 ```
 Download generated Angular frontend code as a ZIP file.
 
+### 10. Generate Full-Stack Integration
+```http
+POST /generate-fullstack-integration
+```
+Generate complete integrated full-stack application with Angular frontend, FastAPI backend, and integration layer.
+
+### 11. Download Integrated Project
+```http
+GET /download-integrated-project/{project_name}
+```
+Download complete integrated full-stack project as a ZIP file.
+
 ## Usage Examples
 
 ### 🎨 Streamlit UI (Recommended)
@@ -184,9 +202,13 @@ Download generated Angular frontend code as a ZIP file.
    - Enter project names for frontend and backend code
    - Click "Generate Angular Code" to create complete Angular application
    - Click "Generate Backend Code" to create complete FastAPI application
+   - **OR** Click "Generate Full-Stack App" to create integrated application with:
+     - Angular frontend + FastAPI backend + Docker setup
+     - API integration and authentication flow
+     - Environment configurations and deployment scripts
    - Review generated files with syntax highlighting and file categorization
    - Download complete projects as ZIP files
-   - Deploy both frontend and backend for full-stack application
+   - Deploy using Docker Compose or manual setup
 
 ### 🔗 API Usage
 

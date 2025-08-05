@@ -69,3 +69,24 @@ class FrontendCodeGenerationResponse(BaseModel):
     generated_files: Optional[Dict[str, str]] = None
     file_count: Optional[int] = None
     framework: Optional[str] = None
+
+class FullStackIntegrationRequest(BaseModel):
+    """Request model for full-stack integration"""
+    frontend_srd: str
+    backend_srd: str
+    project_name: Optional[str] = "integrated_fullstack_app"
+    frontend_framework: Optional[str] = "angular"
+    include_docker: Optional[bool] = True
+    include_auth: Optional[bool] = True
+    output_format: Optional[str] = "files"
+
+class FullStackIntegrationResponse(BaseModel):
+    """Response model for full-stack integration"""
+    success: bool
+    message: str
+    project_path: Optional[str] = None
+    frontend_file_count: Optional[int] = None
+    backend_file_count: Optional[int] = None
+    integration_file_count: Optional[int] = None
+    total_file_count: Optional[int] = None
+    generated_files: Optional[Dict[str, str]] = None
