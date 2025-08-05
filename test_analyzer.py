@@ -51,6 +51,7 @@ async def test_requirement_analyzer():
         
         # Analyze the sample requirements
         print("🔍 Analyzing requirements...")
+        print("⚠️  Note: This may take a few minutes as it uses the latest AutoGen API...")
         results = await analyzer.analyze_requirements(sample_text)
         
         # Save the results
@@ -72,7 +73,8 @@ async def test_requirement_analyzer():
         print(f"❌ Error during testing: {str(e)}")
         print("\nMake sure you have:")
         print("1. Set the OPENAI_API_KEY environment variable")
-        print("2. Installed all required dependencies")
+        print("2. Installed all required dependencies with latest versions")
+        print("3. Run: python fix_dependencies.py")
 
 async def test_document_parser():
     """Test the DocumentParser with the example file"""

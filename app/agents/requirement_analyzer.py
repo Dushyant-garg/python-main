@@ -1,4 +1,8 @@
-import autogen
+from autogen_agentchat.agents import AssistantAgent, UserProxyAgent
+from autogen_agentchat.messages import TextMessage
+from autogen_agentchat.teams import RoundRobinGroupChat
+from autogen_agentchat.conditions import MaxMessageTermination
+from autogen_ext.models.openai import OpenAIChatCompletionClient
 from typing import Dict, Tuple
 import os
 from pathlib import Path
@@ -12,40 +16,32 @@ class RequirementAnalyzer:
     def __init__(self):
         """Initialize the RequirementAnalyzer with AutoGen agents"""
         
-        # Configuration for the LLM
-        llm_config = {
-            "model": settings.OPENAI_MODEL,
-            "api_key": settings.OPENAI_API_KEY,
-            "temperature": 0.1,
-        }
+        # Initialize the OpenAI client
+        self.model_client = OpenAIChatCompletionClient(
+            model=settings.OPENAI_MODEL,
+            api_key=settings.OPENAI_API_KEY,
+            temperature=0.1,
+        )
         
         # Create the requirement analyst agent
-        self.analyst_agent = autogen.AssistantAgent(
+        self.analyst_agent = AssistantAgent(
             name="RequirementAnalyst",
+            model_client=self.model_client,
             system_message=self._get_analyst_system_message(),
-            llm_config=llm_config,
         )
         
         # Create the frontend specialist agent
-        self.frontend_agent = autogen.AssistantAgent(
+        self.frontend_agent = AssistantAgent(
             name="FrontendSpecialist",
+            model_client=self.model_client,
             system_message=self._get_frontend_system_message(),
-            llm_config=llm_config,
         )
         
         # Create the backend specialist agent
-        self.backend_agent = autogen.AssistantAgent(
-            name="BackendSpecialist", 
+        self.backend_agent = AssistantAgent(
+            name="BackendSpecialist",
+            model_client=self.model_client,
             system_message=self._get_backend_system_message(),
-            llm_config=llm_config,
-        )
-        
-        # Create a user proxy agent to coordinate
-        self.user_proxy = autogen.UserProxyAgent(
-            name="UserProxy",
-            human_input_mode="NEVER",
-            max_consecutive_auto_reply=1,
-            code_execution_config=False,
         )
     
     def _get_analyst_system_message(self) -> str:
@@ -194,53 +190,59 @@ Generate a detailed, professional SRD in Markdown format."""
         4. Technical constraints and preferences
         """
         
-        # Get analysis from the analyst
-        self.user_proxy.initiate_chat(
-            self.analyst_agent,
-            message=analysis_prompt,
-            clear_history=True
+        # Create task message for analysis
+        analysis_task = TextMessage(content=analysis_prompt, source="user")
+        
+        # Create a team with the analyst agent for analysis
+        analysis_team = RoundRobinGroupChat(
+            participants=[self.analyst_agent],
+            termination_condition=MaxMessageTermination(1)
         )
         
-        analysis_result = self.analyst_agent.last_message()["content"]
+        # Run analysis
+        analysis_result = await analysis_team.run(task=analysis_task)
+        analysis_content = analysis_result.messages[-1].content
         
         # Step 2: Generate frontend SRD
         frontend_prompt = f"""
         Based on the following requirements analysis, generate a detailed Frontend Software Requirements Document (SRD):
 
-        {analysis_result}
+        {analysis_content}
 
         Please create a comprehensive frontend SRD that covers all aspects of the user interface and user experience requirements.
         """
         
-        self.user_proxy.initiate_chat(
-            self.frontend_agent,
-            message=frontend_prompt,
-            clear_history=True
+        frontend_task = TextMessage(content=frontend_prompt, source="user")
+        frontend_team = RoundRobinGroupChat(
+            participants=[self.frontend_agent],
+            termination_condition=MaxMessageTermination(1)
         )
         
-        frontend_srd = self.frontend_agent.last_message()["content"]
+        frontend_result = await frontend_team.run(task=frontend_task)
+        frontend_srd = frontend_result.messages[-1].content
         
         # Step 3: Generate backend SRD
         backend_prompt = f"""
         Based on the following requirements analysis, generate a detailed Backend Software Requirements Document (SRD):
 
-        {analysis_result}
+        {analysis_content}
 
         Please create a comprehensive backend SRD that covers all aspects of the server-side architecture and business logic requirements.
         """
         
-        self.user_proxy.initiate_chat(
-            self.backend_agent,
-            message=backend_prompt,
-            clear_history=True
+        backend_task = TextMessage(content=backend_prompt, source="user")
+        backend_team = RoundRobinGroupChat(
+            participants=[self.backend_agent],
+            termination_condition=MaxMessageTermination(1)
         )
         
-        backend_srd = self.backend_agent.last_message()["content"]
+        backend_result = await backend_team.run(task=backend_task)
+        backend_srd = backend_result.messages[-1].content
         
         return {
             "frontend_srd": frontend_srd,
             "backend_srd": backend_srd,
-            "analysis": analysis_result
+            "analysis": analysis_content
         }
     
     async def save_srds(self, srd_content: Dict[str, str], output_dir: str = "output") -> Tuple[str, str]:

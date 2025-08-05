@@ -15,11 +15,17 @@ A FastAPI application that uses AutoGen and OpenAI to analyze project documents 
 The application consists of:
 
 1. **Document Parser**: Extracts text from uploaded documents
-2. **RequirementAnalyzer Agent**: AutoGen-based multi-agent system that:
-   - Analyzes project requirements
-   - Generates frontend-specific SRD
-   - Generates backend-specific SRD
-3. **FastAPI Backend**: RESTful API for document upload and analysis
+2. **RequirementAnalyzer Agent**: AutoGen 0.10.0-based multi-agent system that:
+   - Uses specialized agents for analysis (RequirementAnalyst, FrontendSpecialist, BackendSpecialist)
+   - Leverages OpenAI's latest models through AutoGen's modern API
+   - Generates comprehensive frontend and backend SRDs
+3. **FastAPI Backend**: RESTful API with latest FastAPI 0.116.1 for document upload and analysis
+
+### Key Technologies:
+- **AutoGen 0.10.0**: Latest multi-agent conversation framework
+- **OpenAI 1.58.1**: Latest OpenAI API integration
+- **FastAPI 0.116.1**: Modern, fast web framework
+- **Pydantic 2.10.4**: Advanced data validation
 
 ## Setup
 
@@ -30,6 +36,13 @@ The application consists of:
 
 ### Installation
 
+#### Option 1: Automated Setup (Recommended)
+```bash
+python setup.py
+```
+This will automatically install compatible versions and set up the environment.
+
+#### Option 2: Manual Setup
 1. Clone the repository and navigate to the project directory
 2. Install dependencies:
    ```bash
@@ -40,6 +53,15 @@ The application consists of:
    ```
    OPENAI_API_KEY=your_openai_api_key_here
    OPENAI_MODEL=gpt-4
+   ```
+
+#### Troubleshooting
+If you encounter dependency or import errors:
+1. Run the automated setup: `python setup.py`
+2. Or manually fix version conflicts:
+   ```bash
+   pip uninstall openai pyautogen autogen autogen-agentchat autogen-ext
+   pip install pyautogen==0.10.0 autogen-agentchat==0.7.1 autogen-ext[openai]==0.7.1 openai==1.58.1
    ```
 
 ### Running the Application
